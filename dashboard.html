@@ -1,0 +1,960 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>After Scroll — Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #f7f7f5;
+    --card: #ffffff;
+    --ink-1: #1f1f1e;
+    --ink-2: #4a4a48;
+    --ink-3: #787773;
+    --ink-4: #a8a7a1;
+    --line: #ececea;
+    --line-2: #f2f2f0;
+
+    /* Section colors (Notion-style pastels) */
+    --blue-bg: #eaf3fb;  --blue-ink: #1d6fc2;   --blue-tile: #dbeafe;
+    --pink-bg: #fbe9f0;  --pink-ink: #c13d7a;   --pink-tile: #fad4e4;
+    --purple-bg: #f0ebfa; --purple-ink: #7c4ad6; --purple-tile: #e4d7fa;
+    --green-bg: #e7f4ec; --green-ink: #2f8b55;  --green-tile: #cfeadb;
+    --orange-bg: #fcf0e2; --orange-ink: #c26a19; --orange-tile: #fbe0be;
+    --amber-bg: #fcf5d7; --amber-ink: #9c7a0e;
+
+    --good: #1a9f60;
+    --bad:  #d44545;
+    --shadow-sm: 0 1px 2px rgba(15, 15, 15, 0.04), 0 1px 3px rgba(15, 15, 15, 0.04);
+    --shadow-md: 0 2px 6px rgba(15, 15, 15, 0.05), 0 1px 3px rgba(15, 15, 15, 0.04);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    background: var(--bg);
+    color: var(--ink-1);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    line-height: 1.5;
+    font-size: 14px;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  .wrap {
+    max-width: 1240px;
+    margin: 0 auto;
+    padding: 28px 28px 80px;
+  }
+
+  /* ===== HEADER ===== */
+  header.top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 28px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid var(--line);
+  }
+  .logo-row { display: flex; align-items: center; gap: 12px; }
+  .logo-mark {
+    width: 38px; height: 38px;
+    background: linear-gradient(135deg, #7c4ad6 0%, #c13d7a 100%);
+    border-radius: 10px;
+    display: grid; place-items: center;
+    color: white; font-weight: 800; font-size: 16px;
+    box-shadow: var(--shadow-sm);
+  }
+  header.top h1 {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.4px;
+    line-height: 1.15;
+  }
+  header.top .sub {
+    font-size: 12px;
+    color: var(--ink-3);
+    margin-top: 2px;
+  }
+  .top-meta {
+    display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
+  }
+  .chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 12px; font-weight: 500;
+    padding: 6px 11px;
+    border-radius: 8px;
+    background: white;
+    border: 1px solid var(--line);
+    color: var(--ink-2);
+  }
+  .chip.primary {
+    background: var(--purple-bg);
+    border-color: transparent;
+    color: var(--purple-ink);
+    font-weight: 600;
+  }
+  .chip .dot { width: 7px; height: 7px; border-radius: 50%; background: #1a9f60; animation: pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:.45;} }
+
+  /* ===== SECTION HEADERS ===== */
+  section { margin-bottom: 32px; }
+  .sec-head {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 14px;
+  }
+  .sec-head h2 {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--ink-1);
+    letter-spacing: -0.2px;
+  }
+  .sec-head .sec-icon {
+    width: 26px; height: 26px;
+    border-radius: 7px;
+    display: grid; place-items: center;
+    font-size: 14px;
+  }
+  .sec-head .note {
+    font-size: 12px;
+    color: var(--ink-3);
+    margin-left: auto;
+    font-weight: 500;
+  }
+  .sec-head .badge {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 5px;
+    margin-left: 6px;
+  }
+  .sec-blue   .sec-icon { background: var(--blue-bg);   color: var(--blue-ink); }
+  .sec-pink   .sec-icon { background: var(--pink-bg);   color: var(--pink-ink); }
+  .sec-purple .sec-icon { background: var(--purple-bg); color: var(--purple-ink); }
+  .sec-green  .sec-icon { background: var(--green-bg);  color: var(--green-ink); }
+  .sec-orange .sec-icon { background: var(--orange-bg); color: var(--orange-ink); }
+
+  /* ===== KPI CARDS ===== */
+  .grid-kpi {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(178px, 1fr));
+    gap: 12px;
+  }
+  .kpi {
+    background: var(--card);
+    border: 1px solid var(--line);
+    padding: 16px 18px;
+    border-radius: 12px;
+    position: relative;
+    transition: transform .15s ease, box-shadow .15s ease;
+  }
+  .kpi:hover { transform: translateY(-1px); box-shadow: var(--shadow-md); }
+  .kpi .k-label {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--ink-3);
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .k-tile {
+    width: 22px; height: 22px;
+    border-radius: 6px;
+    display: grid; place-items: center;
+    font-size: 11px;
+    font-weight: 700;
+  }
+  .kpi .k-val {
+    font-size: 30px;
+    font-weight: 700;
+    letter-spacing: -0.8px;
+    color: var(--ink-1);
+    line-height: 1.05;
+  }
+  .kpi .k-delta {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    margin-top: 8px;
+    padding: 3px 7px;
+    border-radius: 5px;
+  }
+  .k-delta.up   { color: var(--good); background: #e4f5ed; }
+  .k-delta.down { color: var(--bad);  background: #fbe6e6; }
+  .k-delta.flat { color: var(--ink-3); background: var(--line-2); }
+  .kpi .k-sub {
+    display: block;
+    font-size: 11px;
+    color: var(--ink-4);
+    margin-top: 6px;
+  }
+
+  /* ===== TWO-COL / CARDS ===== */
+  .grid-two { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; }
+  .grid-two.eq { grid-template-columns: 1fr 1fr; }
+  @media (max-width: 900px) { .grid-two, .grid-two.eq { grid-template-columns: 1fr; } }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 20px;
+  }
+  .card h3 {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink-1);
+    margin-bottom: 14px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .card h3 .spec {
+    font-weight: 500; color: var(--ink-3); font-size: 12px;
+  }
+
+  /* ===== TABLE ===== */
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { text-align: left; padding: 10px 8px; }
+  th {
+    font-size: 10px;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    font-weight: 600;
+    border-bottom: 1px solid var(--line);
+  }
+  td { border-bottom: 1px solid var(--line-2); color: var(--ink-2); }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: var(--line-2); }
+  td.num { text-align: right; font-variant-numeric: tabular-nums; color: var(--ink-1); font-weight: 600; }
+  td.title { color: var(--ink-1); font-weight: 500; }
+  td .path { font-size: 11px; color: var(--ink-4); display: block; font-weight: 400; margin-top: 1px; }
+  td .pill-rank {
+    display: inline-grid; place-items: center;
+    width: 22px; height: 22px;
+    background: var(--blue-bg); color: var(--blue-ink);
+    border-radius: 6px; font-size: 11px; font-weight: 700;
+    margin-right: 10px;
+  }
+
+  /* ===== SOURCE BARS ===== */
+  .bar-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--line-2);
+  }
+  .bar-row:last-child { border: none; }
+  .bar-name { flex: 0 0 130px; font-size: 13px; font-weight: 500; color: var(--ink-1); }
+  .bar-track {
+    flex: 1; height: 8px; background: var(--line-2);
+    border-radius: 4px; overflow: hidden;
+  }
+  .bar-fill { height: 100%; border-radius: 4px; }
+  .bar-val { flex: 0 0 80px; text-align: right; font-size: 12px; color: var(--ink-2); font-variant-numeric: tabular-nums; font-weight: 500; }
+
+  /* ===== PIPELINE STAGES ===== */
+  .pipeline {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  @media (max-width: 920px) { .pipeline { grid-template-columns: repeat(4, 1fr); } }
+  @media (max-width: 560px) { .pipeline { grid-template-columns: repeat(2, 1fr); } }
+  .stage {
+    background: var(--card);
+    border: 1px solid var(--line);
+    padding: 14px 12px;
+    border-radius: 10px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .stage::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0;
+    height: 3px;
+  }
+  .stage.idea::before      { background: #cbd5e1; }
+  .stage.backlog::before   { background: #9ca3af; }
+  .stage.writing::before   { background: #38bdf8; }
+  .stage.editing::before   { background: #f59e0b; }
+  .stage.scheduled::before { background: #a855f7; }
+  .stage.pinterest::before { background: #ec4899; }
+  .stage.published::before { background: #10b981; }
+  .stage.optimize::before  { background: #14b8a6; }
+  .stage .count {
+    font-size: 26px; font-weight: 700; color: var(--ink-1);
+    letter-spacing: -0.8px; line-height: 1;
+  }
+  .stage.dim .count { color: var(--ink-4); font-weight: 500; }
+  .stage .name {
+    font-size: 10px; letter-spacing: 0.8px; text-transform: uppercase;
+    color: var(--ink-3); margin-top: 6px; font-weight: 600;
+  }
+
+  /* ===== POST LIST ===== */
+  .post-list { list-style: none; }
+  .post-list li {
+    padding: 10px 0;
+    border-bottom: 1px solid var(--line-2);
+    display: flex; gap: 10px; align-items: center;
+  }
+  .post-list li:last-child { border: none; }
+  .status-badge {
+    flex: 0 0 auto;
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+    padding: 4px 8px; border-radius: 5px;
+    white-space: nowrap;
+  }
+  .status-badge.idea      { background: #f1f5f9; color: #64748b; }
+  .status-badge.backlog   { background: #f3f4f6; color: #4b5563; }
+  .status-badge.writing   { background: #e0f2fe; color: #0284c7; }
+  .status-badge.editing   { background: #fef3c7; color: #b45309; }
+  .status-badge.scheduled { background: #f3e8ff; color: #7c3aed; }
+  .status-badge.pinterest { background: #fce7f3; color: #be185d; }
+  .status-badge.published { background: #d1fae5; color: #047857; }
+  .post-title { flex: 1; font-size: 13px; color: var(--ink-1); line-height: 1.4; font-weight: 500; }
+  .post-date { flex: 0 0 58px; font-size: 11px; color: var(--ink-4); font-weight: 500; }
+
+  /* ===== INSIGHTS ===== */
+  .insight-list { list-style: none; }
+  .insight-list li {
+    padding: 12px 14px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--purple-ink);
+    border-radius: 8px;
+    margin-bottom: 8px;
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--ink-2);
+  }
+  .insight-list li:last-child { margin-bottom: 0; }
+  .insight-list li strong { color: var(--ink-1); font-weight: 700; }
+  .insight-list.blue li   { border-left-color: var(--blue-ink); }
+  .insight-list.green li  { border-left-color: var(--green-ink); }
+
+  /* ===== CHART ===== */
+  .chart-wrap { position: relative; height: 240px; }
+
+  /* ===== MANUAL ENTRY ===== */
+  .empty-note {
+    padding: 12px 14px;
+    background: var(--amber-bg);
+    border: 1px solid #f0e0a8;
+    border-radius: 8px;
+    color: var(--amber-ink);
+    font-size: 12px;
+    margin-bottom: 14px;
+    display: flex; align-items: flex-start; gap: 10px;
+  }
+  .empty-note .em-icon { font-size: 15px; line-height: 1; }
+  .manual-entry {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+  @media (max-width: 700px) { .manual-entry { grid-template-columns: 1fr; } }
+  .field {
+    background: var(--card);
+    border: 1px solid var(--line);
+    padding: 14px 16px;
+    border-radius: 10px;
+    transition: border-color .15s ease;
+  }
+  .field:focus-within { border-color: var(--pink-ink); box-shadow: 0 0 0 3px var(--pink-bg); }
+  .field label {
+    display: block;
+    font-size: 10px;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    color: var(--ink-3);
+    margin-bottom: 4px;
+    font-weight: 600;
+  }
+  .field .v {
+    font-size: 22px; font-weight: 700; color: var(--ink-1);
+    outline: none; letter-spacing: -0.4px; min-height: 28px;
+  }
+  .field .v[contenteditable]:empty::before {
+    content: '—'; color: var(--ink-4); font-weight: 400;
+  }
+  .field .note {
+    font-size: 11px; color: var(--ink-4); margin-top: 4px;
+  }
+  .subsec-title {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 12px; font-weight: 600;
+    color: var(--ink-2);
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    margin: 14px 0 10px;
+  }
+  .subsec-title .dot-platform {
+    width: 10px; height: 10px; border-radius: 3px; display: inline-block;
+  }
+
+  /* ===== FOOTER ===== */
+  footer.bot {
+    margin-top: 40px;
+    padding: 18px 20px;
+    background: white;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    color: var(--ink-3);
+    font-size: 12px;
+    display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px;
+  }
+  footer kbd {
+    background: var(--line-2);
+    border: 1px solid var(--line);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-family: 'SF Mono', Menlo, monospace;
+    color: var(--ink-1);
+  }
+
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- HEADER -->
+<header class="top">
+  <div class="logo-row">
+    <div class="logo-mark">AS</div>
+    <div>
+      <h1>After Scroll Dashboard</h1>
+      <div class="sub">A publication for women building a life on purpose</div>
+    </div>
+  </div>
+  <div class="top-meta">
+    <span class="chip"><span class="dot"></span>Live · GA4 + GSC + ClickUp</span>
+    <span class="chip primary">Last 30 days</span>
+    <span class="chip">Updated Apr 19, 2026</span>
+  </div>
+</header>
+
+<!-- ===== SECTION 1: TRAFFIC KPIs ===== -->
+<section class="sec-blue">
+  <div class="sec-head sec-blue">
+    <div class="sec-icon">📊</div>
+    <h2>Traffic at a glance</h2>
+    <span class="note">Google Analytics · vs previous 30 days</span>
+  </div>
+  <div class="grid-kpi">
+    <div class="kpi">
+      <div class="k-label"><span class="k-tile" style="background:var(--blue-bg);color:var(--blue-ink);">👥</span>Users</div>
+      <div class="k-val">627</div>
+      <div class="k-delta up">▲ 107%</div>
+      <span class="k-sub">was 303</span>
+    </div>
+    <div class="kpi">
+      <div class="k-label"><span class="k-tile" style="background:var(--blue-bg);color:var(--blue-ink);">🔄</span>Sessions</div>
+      <div class="k-val">703</div>
+      <div class="k-delta up">▲ 103%</div>
+      <span class="k-sub">was 347</span>
+    </div>
+    <div class="kpi">
+      <div class="k-label"><span class="k-tile" style="background:var(--blue-bg);color:var(--blue-ink);">📄</span>Pageviews</div>
+      <div class="k-val">798</div>
+      <div class="k-delta up">▲ 78%</div>
+      <span class="k-sub">was 448</span>
+    </div>
+    <div class="kpi">
+      <div class="k-label"><span class="k-tile" style="background:var(--green-bg);color:var(--green-ink);">✨</span>New users</div>
+      <div class="k-val">623</div>
+      <div class="k-delta up">▲ 110%</div>
+      <span class="k-sub">was 297</span>
+    </div>
+    <div class="kpi">
+      <div class="k-label"><span class="k-tile" style="background:var(--orange-bg);color:var(--orange-ink);">⏱</span>Avg. session</div>
+      <div class="k-val">1m 27s</div>
+      <div class="k-delta up">▲ 15%</div>
+      <span class="k-sub">was 1m 15s</span>
+    </div>
+    <div class="kpi">
+      <div class="k-label"><span class="k-tile" style="background:var(--amber-bg);color:var(--amber-ink);">🎯</span>Engagement</div>
+      <div class="k-val">20.5%</div>
+      <div class="k-delta down">▼ 6.3pp</div>
+      <span class="k-sub">was 26.8%</span>
+    </div>
+  </div>
+</section>
+
+<!-- ===== SECTION 2: TRAFFIC CHART + SOURCES ===== -->
+<section>
+  <div class="grid-two">
+    <div class="card">
+      <h3>📈 Daily users <span class="spec">· last 30 days</span></h3>
+      <div class="chart-wrap"><canvas id="trafficChart"></canvas></div>
+    </div>
+    <div class="card">
+      <h3>🌐 Traffic sources</h3>
+      <div id="sources"></div>
+      <div style="font-size:11px;color:var(--ink-3);margin-top:14px;padding:10px;background:var(--blue-bg);border-radius:6px;color:var(--blue-ink);">
+        <strong style="font-weight:600;">Pinterest-led growth:</strong> Organic Social is almost all your traffic. SEO still nascent.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== SECTION 3: TOP PAGES ===== -->
+<section class="sec-blue">
+  <div class="sec-head sec-blue">
+    <div class="sec-icon">🔝</div>
+    <h2>Top pages</h2>
+    <span class="note">by pageviews · last 30 days</span>
+  </div>
+  <div class="grid-two">
+    <div class="card">
+      <table>
+        <thead><tr><th>Post</th><th style="text-align:right;">Views</th><th style="text-align:right;">Users</th><th style="text-align:right;">Avg. time</th></tr></thead>
+        <tbody id="top-pages"></tbody>
+      </table>
+    </div>
+    <div class="card">
+      <h3>💡 Quick reads</h3>
+      <ul class="insight-list blue">
+        <li><strong>One post drives ~25% of views.</strong> The homemade bread recipe (197 views) outpaces #2 by 1.4×. You have very few recipe posts in the pipeline — this could be a pillar.</li>
+        <li><strong>Spring capsule is steady</strong> (138 views) — evergreen seasonal potential, should get a 2026 Q4 / Fall version.</li>
+        <li><strong>Engagement dipped</strong> 26.8% → 20.5%. Volume effect — new visitors bouncing faster. Worth watching over the next 30d.</li>
+        <li><strong>Social = 79%, search = 1%.</strong> Normal for a young blog. 41 posts upstream give you months of runway for SEO to compound.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ===== SECTION 4: EDITORIAL PIPELINE ===== -->
+<section class="sec-purple">
+  <div class="sec-head sec-purple">
+    <div class="sec-icon">✍️</div>
+    <h2>Editorial pipeline</h2>
+    <span class="note">ClickUp · 147 posts total</span>
+  </div>
+
+  <div class="pipeline">
+    <div class="stage idea"><div class="count">26</div><div class="name">Idea</div></div>
+    <div class="stage backlog"><div class="count">15</div><div class="name">Backlog</div></div>
+    <div class="stage writing"><div class="count">6</div><div class="name">Writing</div></div>
+    <div class="stage editing"><div class="count">1</div><div class="name">Editing</div></div>
+    <div class="stage scheduled"><div class="count">5</div><div class="name">Scheduled</div></div>
+    <div class="stage pinterest"><div class="count">2</div><div class="name">Pin Ready</div></div>
+    <div class="stage published"><div class="count">92</div><div class="name">Published</div></div>
+    <div class="stage optimize dim"><div class="count">0</div><div class="name">Optimize</div></div>
+  </div>
+
+  <div class="card" style="margin-bottom:16px;">
+    <h3>🏛 Content pillars <span class="spec">· across all 147 posts</span></h3>
+    <div id="pillars"></div>
+  </div>
+
+  <div class="grid-two eq">
+    <div class="card">
+      <h3>🎯 Next up <span class="spec">· writing → pin ready</span></h3>
+      <ul class="post-list">
+        <li><span class="status-badge scheduled">Scheduled</span><span class="post-title">Soft Power at Work: Subtle Ways Women Are Redefining Leadership</span></li>
+        <li><span class="status-badge scheduled">Scheduled</span><span class="post-title">Why So Many Smart Women Still Feel Like They're Faking Adulthood</span></li>
+        <li><span class="status-badge scheduled">Scheduled</span><span class="post-title">The Quiet Confidence of Knowing How to Fix Little Things Yourself</span></li>
+        <li><span class="status-badge scheduled">Scheduled</span><span class="post-title">Soft Crafts for Soft Evenings: Cozy Creative Projects for After Work</span></li>
+        <li><span class="status-badge scheduled">Scheduled</span><span class="post-title">How to Actually Read Books Again When Your Brain Has Been Trained for Scroll</span></li>
+        <li><span class="status-badge editing">Editing</span><span class="post-title">The Tiny Household Skills That Make Life Feel Weirdly More Luxurious</span></li>
+        <li><span class="status-badge writing">Writing</span><span class="post-title">The Permission to Be Bad at Things</span></li>
+        <li><span class="status-badge writing">Writing</span><span class="post-title">Why So Many Women Are Craving Practical Elegance Right Now</span></li>
+        <li><span class="status-badge writing">Writing</span><span class="post-title">How to Become the Kind of Woman Who Can Pull a Dinner Together</span></li>
+        <li><span class="status-badge writing">Writing</span><span class="post-title">The Quiet Phone: When You Make Your Device Intentionally Boring</span></li>
+        <li><span class="status-badge writing">Writing</span><span class="post-title">A Few Old-School Kitchen Skills That Make You Feel More Capable</span></li>
+        <li><span class="status-badge writing">Writing</span><span class="post-title">The New Status Symbol Is Being Good at Ordinary Things</span></li>
+        <li><span class="status-badge pinterest">Pin Ready</span><span class="post-title">Sunset Walk Club: Simple Evening Rituals for Spring</span></li>
+        <li><span class="status-badge pinterest">Pin Ready</span><span class="post-title">Pretty Little Projects: 10 Creative Ideas You Can Finish in One Weekend</span></li>
+      </ul>
+      <div style="font-size:11px;color:var(--ink-4);margin-top:12px;padding:8px 10px;background:var(--line-2);border-radius:6px;">+ 26 ideas, 15 backlog waiting upstream</div>
+    </div>
+    <div class="card">
+      <h3>🚀 Recently published</h3>
+      <ul class="post-list">
+        <li><span class="post-date">Apr 19</span><span class="post-title">8 Simple Summer Habits That Make Your Days Feel Longer</span></li>
+        <li><span class="post-date">Apr 19</span><span class="post-title">A Simple Weeknight Routine to Unwind After Work</span></li>
+        <li><span class="post-date">Apr 19</span><span class="post-title">Low-Maintenance Greenery for the Girl Who Forgets to Water Plants</span></li>
+        <li><span class="post-date">Apr 19</span><span class="post-title">Gentle Ambition: Building a Career You're Proud Of Without Burning Out</span></li>
+        <li><span class="post-date">Apr 18</span><span class="post-title">Flower Fridays: The Simple Ritual That Makes Your Home Sweeter</span></li>
+        <li><span class="post-date">Apr 18</span><span class="post-title">Low-Stakes Creativity: Letting Yourself Be Bad at Things (On Purpose)</span></li>
+        <li><span class="post-date">Apr 18</span><span class="post-title">Charm Over Aesthetic: The Return of Mismatched, Story-Rich Homes</span></li>
+        <li><span class="post-date">Apr 16</span><span class="post-title">A Real-Life Glow Up: Simple Changes That Actually Make a Difference</span></li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ===== SECTION 5: PINTEREST ===== -->
+<section class="sec-pink">
+  <div class="sec-head sec-pink">
+    <div class="sec-icon">📌</div>
+    <h2>Pinterest</h2>
+    <span class="note">outbound · last 30 days</span>
+  </div>
+  <div class="grid-kpi">
+    <div class="kpi">
+      <div class="k-label"><span class="k-tile" style="background:var(--pink-tile);color:var(--pink-ink);">↗</span>Outbound clicks</div>
+      <div class="k-val">550</div>
+      <span class="k-delta up">▲ +36%</span>
+      <span class="k-sub">last 7d vs prior 7d</span>
+    </div>
+    <div class="kpi">
+      <div class="k-label"><span class="k-tile" style="background:var(--pink-tile);color:var(--pink-ink);">7</span>Last 7 days</div>
+      <div class="k-val">223</div>
+      <span class="k-delta up">▲ clicks climbing</span>
+      <span class="k-sub">Apr 13 – Apr 19</span>
+    </div>
+    <div class="kpi">
+      <div class="k-label"><span class="k-tile" style="background:var(--pink-tile);color:var(--pink-ink);">⌀</span>Daily avg</div>
+      <div class="k-val">17.7</div>
+      <span class="k-delta flat">30-day mean</span>
+      <span class="k-sub">vs. 31.9/day last 7</span>
+    </div>
+    <div class="kpi">
+      <div class="k-label"><span class="k-tile" style="background:var(--pink-tile);color:var(--pink-ink);">★</span>Peak day</div>
+      <div class="k-val">55</div>
+      <span class="k-delta up">new high</span>
+      <span class="k-sub">Apr 12 · Sunday</span>
+    </div>
+  </div>
+  <div class="grid-two" style="margin-top:14px;">
+    <div class="card">
+      <h3>📈 Daily outbound clicks · 30 days</h3>
+      <div style="height:220px; margin-top:6px;"><canvas id="pinChart"></canvas></div>
+    </div>
+    <div class="card">
+      <h3>🏆 Top boards by clicks</h3>
+      <div id="pin-boards" style="margin-top:4px;"></div>
+    </div>
+  </div>
+  <div class="empty-note" style="margin-top:14px;">
+    <span class="em-icon">ℹ️</span>
+    <div>Numbers pulled from the <strong>Pinterest Analytics overview</strong> CSV (2026-03-20 → 2026-04-19). Clicks accelerated sharply from Apr 10 — worth checking which pins drove it.</div>
+  </div>
+</section>
+
+<!-- ===== SECTION 6: SEARCH CONSOLE ===== -->
+<section class="sec-green">
+  <div class="sec-head sec-green">
+    <div class="sec-icon">🔍</div>
+    <h2>Search Console</h2>
+    <span class="note">web · last 30 days</span>
+  </div>
+  <div class="grid-two">
+    <div class="card">
+      <h3>📑 Top pages by impressions</h3>
+      <table>
+        <thead><tr><th>Page</th><th style="text-align:right;">Impr.</th><th style="text-align:right;">Clicks</th><th style="text-align:right;">Pos.</th></tr></thead>
+        <tbody>
+          <tr><td class="title">/morning-routine-checklist/</td><td class="num">545</td><td class="num">1</td><td class="num">26.2</td></tr>
+          <tr><td class="title">/spring-capsule-wardrobe-2026/</td><td class="num">296</td><td class="num">1</td><td class="num">9.1</td></tr>
+          <tr><td class="title">/low-dopamine-morning-routine/</td><td class="num">275</td><td class="num">1</td><td class="num">12.5</td></tr>
+          <tr><td class="title">/how-to-structure-your-week/</td><td class="num">41</td><td class="num">1</td><td class="num">5.9</td></tr>
+          <tr><td class="title">/small-apartment-reading-nook-ideas/</td><td class="num">37</td><td class="num">1</td><td class="num">7.0</td></tr>
+          <tr><td class="title">/ (home)</td><td class="num">29</td><td class="num">0</td><td class="num">3.4</td></tr>
+          <tr><td class="title">/blog-clients-small-audience/</td><td class="num">19</td><td class="num">0</td><td class="num">24.9</td></tr>
+          <tr><td class="title">/hobbies-for-fun-not-productivity/</td><td class="num">17</td><td class="num">1</td><td class="num">6.2</td></tr>
+          <tr><td class="title">/analog-hour-at-home/</td><td class="num">15</td><td class="num">1</td><td class="num">4.9</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="card">
+      <h3>🎯 SEO wins & gaps</h3>
+      <ul class="insight-list green">
+        <li><strong>Morning routine checklist = SEO hook.</strong> 545 impressions, 1 click at position 26. Title/meta isn't compelling or you're ranking for queries you don't want. Check the query list.</li>
+        <li><strong>Spring capsule at position 9.1</strong> — page 1 territory. A better title could 3-5× clicks. Quick win.</li>
+        <li><strong>"Self-esteem book" queries</strong> appear a lot at positions 30-50. Consider a pillar post if it fits your voice.</li>
+        <li><strong>Analog hour + hobbies-for-fun</strong> ranking top 6 — very on-brand for intentionality. Internal-link these heavily.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ===== SECTION 7: EMAIL & FUNNELS ===== -->
+<section class="sec-orange">
+  <div class="sec-head sec-orange">
+    <div class="sec-icon">✉️</div>
+    <h2>Email & Funnels</h2>
+    <span class="note">Substack list · Systeme.io funnels</span>
+  </div>
+
+  <div class="subsec-title"><span class="dot-platform" style="background:#ff6719;"></span>Substack</div>
+  <div class="grid-kpi">
+    <div class="kpi">
+      <div class="k-label"><span class="k-tile" style="background:var(--orange-tile);color:var(--orange-ink);">✦</span>Subscribers</div>
+      <div class="k-val">4</div>
+      <span class="k-delta up">+1 this month</span>
+      <span class="k-sub">Apr 7, 2026 · newest sub</span>
+    </div>
+    <div class="kpi">
+      <div class="k-label"><span class="k-tile" style="background:var(--orange-tile);color:var(--orange-ink);">↑</span>Growth · 30d</div>
+      <div class="k-val">+1</div>
+      <span class="k-delta up">+33% MoM</span>
+      <span class="k-sub">3 → 4 subscribers</span>
+    </div>
+    <div class="kpi">
+      <div class="k-label"><span class="k-tile" style="background:var(--orange-tile);color:var(--orange-ink);">⌛</span>List age</div>
+      <div class="k-val">7 mo</div>
+      <span class="k-delta flat">since Sept 2025</span>
+      <span class="k-sub">~0.3 subs/mo lifetime</span>
+    </div>
+    <div class="kpi">
+      <div class="k-label"><span class="k-tile" style="background:var(--orange-tile);color:var(--orange-ink);">%</span>Open rate</div>
+      <div class="k-val" style="font-size:22px; color:var(--ink-3);">add →</div>
+      <span class="k-delta flat" contenteditable="true" style="cursor:text;">last 5 sends</span>
+      <span class="k-sub">click to edit</span>
+    </div>
+  </div>
+
+  <div class="subsec-title" style="margin-top:20px;"><span class="dot-platform" style="background:#3e5faa;"></span>Systeme.io · funnels (last 30 days)</div>
+  <div class="grid-kpi">
+    <div class="kpi">
+      <div class="k-label"><span class="k-tile" style="background:var(--orange-tile);color:var(--orange-ink);">👁</span>Page views</div>
+      <div class="k-val">25</div>
+      <span class="k-delta flat">both funnels combined</span>
+      <span class="k-sub">Morning Routine + Sign Up</span>
+    </div>
+    <div class="kpi">
+      <div class="k-label"><span class="k-tile" style="background:var(--orange-tile);color:var(--orange-ink);">✓</span>Opt-ins</div>
+      <div class="k-val">1</div>
+      <span class="k-delta flat">4% conv. blended</span>
+      <span class="k-sub">Sign Up Form only</span>
+    </div>
+    <div class="kpi">
+      <div class="k-label"><span class="k-tile" style="background:var(--orange-tile);color:var(--orange-ink);">$</span>Revenue</div>
+      <div class="k-val">$0</div>
+      <span class="k-delta flat">no products live</span>
+      <span class="k-sub">sales funnels inactive</span>
+    </div>
+    <div class="kpi">
+      <div class="k-label"><span class="k-tile" style="background:var(--orange-tile);color:var(--orange-ink);">⚠</span>Conversion gap</div>
+      <div class="k-val">0/25</div>
+      <span class="k-delta down">Morning Routine</span>
+      <span class="k-sub">25 views, 0 opt-ins</span>
+    </div>
+  </div>
+  <div class="empty-note" style="margin-top:14px;">
+    <span class="em-icon">💡</span>
+    <div><strong>Morning Routine Checklist</strong> is getting traffic (25 page views) but not a single opt-in. That's the highest-leverage thing to fix: check the form copy, placement, and whether the lead magnet promise lands.</div>
+  </div>
+</section>
+
+<footer class="bot">
+  <div>After Scroll Dashboard · built once, refreshed on ask.</div>
+  <div>Tell Claude <kbd>atualiza o dashboard</kbd> to pull fresh numbers.</div>
+</footer>
+
+</div>
+
+<script>
+  // ===== PILLARS =====
+  const pillars = [
+    { name: 'Living',        count: 67, pct: 45.6, color: '#7c4ad6' },
+    { name: 'Home',          count: 33, pct: 22.4, color: '#ec4899' },
+    { name: 'Work & Money',  count: 32, pct: 21.8, color: '#0ea5e9' },
+    { name: 'Wellness',      count:  5, pct:  3.4, color: '#10b981' },
+    { name: 'Relationships', count:  5, pct:  3.4, color: '#f59e0b' },
+    { name: 'Newsletter',    count:  4, pct:  2.7, color: '#f43f5e' },
+  ];
+  const pEl = document.getElementById('pillars');
+  pillars.forEach(p => {
+    const row = document.createElement('div');
+    row.className = 'bar-row';
+    row.innerHTML = `
+      <span class="bar-name">${p.name}</span>
+      <span class="bar-track"><span class="bar-fill" style="width:${p.pct}%;background:${p.color};"></span></span>
+      <span class="bar-val">${p.count} posts</span>`;
+    pEl.appendChild(row);
+  });
+
+  // ===== TRAFFIC SOURCES =====
+  const sources = [
+    { name: 'Organic Social', sessions: 553, pct: 78.7, color: '#ec4899' },
+    { name: 'Direct',         sessions: 126, pct: 17.9, color: '#0ea5e9' },
+    { name: 'Unassigned',     sessions:   9, pct:  1.3, color: '#9ca3af' },
+    { name: 'Cross-network',  sessions:   8, pct:  1.1, color: '#a855f7' },
+    { name: 'Organic Search', sessions:   7, pct:  1.0, color: '#10b981' },
+    { name: 'Referral',       sessions:   5, pct:  0.7, color: '#f59e0b' },
+  ];
+  const srcEl = document.getElementById('sources');
+  sources.forEach(s => {
+    const row = document.createElement('div');
+    row.className = 'bar-row';
+    row.innerHTML = `
+      <span class="bar-name">${s.name}</span>
+      <span class="bar-track"><span class="bar-fill" style="width:${s.pct}%;background:${s.color};"></span></span>
+      <span class="bar-val">${s.sessions} · ${s.pct}%</span>`;
+    srcEl.appendChild(row);
+  });
+
+  // ===== TOP PAGES =====
+  const topPages = [
+    { path: '/simple-homemade-bread-recipe/', title: 'Easy Homemade Bread Recipe', views: 197, users: 170, avg: '44s' },
+    { path: '/spring-capsule-wardrobe-2026/', title: 'Spring Capsule Wardrobe 2026', views: 138, users: 134, avg: '49s' },
+    { path: '/', title: 'Home', views: 61, users: 36, avg: '2m 33s' },
+    { path: '/crunchy-cabbage-salad-recipes/', title: '5 Crunchy Cabbage Salads', views: 45, users: 41, avg: '1m 18s' },
+    { path: '/romanticize-your-life-this-spring/', title: '7 Ways to Romanticize Your Life', views: 29, users: 25, avg: '1m 06s' },
+    { path: '/slow-living-meaning-how-to-start/', title: 'Slow Living: What It Actually Means', views: 29, users: 22, avg: '1m 56s' },
+    { path: '/at-home-spa-night-ideas-spring/', title: '5 At-Home Spa Night Ideas', views: 24, users: 23, avg: '9s' },
+    { path: '/rebrand-6-months/', title: 'What a 6-Month Rebrand Looks Like', views: 20, users: 19, avg: '2m 02s' },
+    { path: '/screen-free-activities-for-kids/', title: '25+ Screen-Free Activities for Kids', views: 17, users: 17, avg: '52s' },
+    { path: '/screen-free-activities-for-teens/', title: '23 Screen-Free Activities for Teens', views: 13, users: 13, avg: '47s' },
+  ];
+  const tpEl = document.getElementById('top-pages');
+  topPages.forEach((p, i) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="title"><span class="pill-rank">${i+1}</span>${p.title}<span class="path">${p.path}</span></td>
+      <td class="num">${p.views}</td>
+      <td class="num">${p.users}</td>
+      <td class="num">${p.avg}</td>`;
+    tpEl.appendChild(tr);
+  });
+
+  // ===== CHART =====
+  const days = ['Mar 20','','Mar 22','','Mar 24','','Mar 26','','Mar 28','','Mar 30','','Apr 01','','Apr 03','','Apr 05','','Apr 07','','Apr 09','','Apr 11','','Apr 13','','Apr 15','','Apr 17',''];
+  const users = [17,8,14,16,15,12,18,13,16,17,10,12,10,12,14,12,7,16,5,16,27,31,52,42,52,33,30,36,51,28];
+  const ctx = document.getElementById('trafficChart').getContext('2d');
+  const grd = ctx.createLinearGradient(0, 0, 0, 240);
+  grd.addColorStop(0, 'rgba(29, 111, 194, 0.28)');
+  grd.addColorStop(1, 'rgba(29, 111, 194, 0.02)');
+  new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: days,
+      datasets: [{
+        label: 'Users',
+        data: users,
+        borderColor: '#1d6fc2',
+        backgroundColor: grd,
+        borderWidth: 2.5,
+        tension: 0.38,
+        pointRadius: 0,
+        pointHoverRadius: 6,
+        pointHoverBackgroundColor: '#1d6fc2',
+        pointHoverBorderColor: '#fff',
+        pointHoverBorderWidth: 2,
+        fill: true,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#1f1f1e',
+          titleFont: { family: 'Inter', size: 12, weight: '600' },
+          bodyFont:  { family: 'Inter', size: 12 },
+          padding: 10,
+          cornerRadius: 8,
+          displayColors: false,
+        }
+      },
+      scales: {
+        x: {
+          grid: { display: false },
+          border: { display: false },
+          ticks: { font: { family: 'Inter', size: 10 }, color: '#a8a7a1', maxRotation: 0 }
+        },
+        y: {
+          beginAtZero: true,
+          border: { display: false },
+          grid: { color: '#f2f2f0', drawTicks: false },
+          ticks: { font: { family: 'Inter', size: 10 }, color: '#a8a7a1', padding: 8 }
+        }
+      }
+    }
+  });
+
+  // ===== PINTEREST DAILY CHART =====
+  const pinLabels = ['Mar 20','','Mar 22','','Mar 24','','Mar 26','','Mar 28','','Mar 30','','Apr 01','','Apr 03','','Apr 05','','Apr 07','','Apr 09','','Apr 11','','Apr 13','','Apr 15','','Apr 17','','Apr 19'];
+  const pinClicks = [8,13,10,5,14,13,11,5,15,11,11,5,4,13,7,14,4,15,8,7,15,21,43,55,44,39,26,32,33,30,19];
+  const pctx = document.getElementById('pinChart').getContext('2d');
+  const pgrd = pctx.createLinearGradient(0, 0, 0, 220);
+  pgrd.addColorStop(0, 'rgba(193, 61, 122, 0.30)');
+  pgrd.addColorStop(1, 'rgba(193, 61, 122, 0.02)');
+  new Chart(pctx, {
+    type: 'line',
+    data: {
+      labels: pinLabels,
+      datasets: [{
+        label: 'Outbound clicks',
+        data: pinClicks,
+        borderColor: '#c13d7a',
+        backgroundColor: pgrd,
+        borderWidth: 2.5,
+        tension: 0.38,
+        pointRadius: 0,
+        pointHoverRadius: 6,
+        pointHoverBackgroundColor: '#c13d7a',
+        pointHoverBorderColor: '#fff',
+        pointHoverBorderWidth: 2,
+        fill: true,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#1f1f1e',
+          titleFont: { family: 'Inter', size: 12, weight: '600' },
+          bodyFont:  { family: 'Inter', size: 12 },
+          padding: 10,
+          cornerRadius: 8,
+          displayColors: false,
+        }
+      },
+      scales: {
+        x: {
+          grid: { display: false },
+          border: { display: false },
+          ticks: { font: { family: 'Inter', size: 10 }, color: '#a8a7a1', maxRotation: 0 }
+        },
+        y: {
+          beginAtZero: true,
+          border: { display: false },
+          grid: { color: '#f2f2f0', drawTicks: false },
+          ticks: { font: { family: 'Inter', size: 10 }, color: '#a8a7a1', padding: 8 }
+        }
+      }
+    }
+  });
+
+  // ===== PINTEREST TOP BOARDS =====
+  const boards = [
+    { name: 'Homemade Bread Recipes',   clicks: 115, impressions: 958,  color: '#c13d7a' },
+    { name: 'Easy Bread Recipes',       clicks: 71,  impressions: 588,  color: '#d65089' },
+    { name: 'Capsule Wardrobe Women',   clicks: 67,  impressions: 2130, color: '#db6498' },
+    { name: 'Spring Outfits 2026',      clicks: 52,  impressions: 4654, color: '#e076a8' },
+    { name: 'Big Salads That Eat Like Meals', clicks: 40, impressions: 582, color: '#e589b5' },
+    { name: 'Romanticize Your Life',    clicks: 28,  impressions: 3369, color: '#ea9dc3' },
+    { name: 'Cozy Living',              clicks: 20,  impressions: 1211, color: '#efb0d1' },
+    { name: 'Digital Minimalism',       clicks: 18,  impressions: 1039, color: '#f2c3dd' },
+  ];
+  const maxClicks = Math.max(...boards.map(b => b.clicks));
+  const bEl = document.getElementById('pin-boards');
+  boards.forEach(b => {
+    const row = document.createElement('div');
+    row.className = 'bar-row';
+    row.innerHTML = `
+      <span class="bar-name" style="font-size:12.5px;">${b.name}</span>
+      <span class="bar-track"><span class="bar-fill" style="width:${(b.clicks/maxClicks*100).toFixed(1)}%;background:${b.color};"></span></span>
+      <span class="bar-val">${b.clicks} · ${b.impressions.toLocaleString()} impr.</span>`;
+    bEl.appendChild(row);
+  });
+</script>
+
+</body>
+</html>
